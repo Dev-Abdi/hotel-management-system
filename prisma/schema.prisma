@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  CASHIER
+  WAITER
+}
+
+enum PaymentMethod {
+  CASH
+  MPESA
+  CREDIT
+}
+
+enum ExpenseCategory {
+  FOOD_SUPPLIES
+  DRINKS
+  SALARIES
+  TRANSPORT
+  UTILITIES
+  MAINTENANCE
+  RENT
+  OTHER
+}
+
+model User {
+  id       String   @id @default(cuid())
+  name     String
+  username String   @unique
+  password String
+  role     UserRole @default(WAITER)
+  active   Boolean  @default(true)
+
+  sales             Sale[]
+  expenses          Expense[]
+  creditPayments    CreditPayment[]  @relation("CreditPaymentReceivedBy")
+  reconciliations   Reconciliation[] @relation("ReconciliationUser")
+  approvedDocuments Document[]       @relation("DocumentApprover")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sale {
+  id            String         @id @default(cuid())
+  amount        Int
+  paymentMethod PaymentMethod?
+  description   String?
+
+  postedById String
+  postedBy   User @relation(
+    fields: [postedById],
+    references: [id]
+  )
+
+  creditCustomerId String?
+  creditCustomer   CreditCustomer? @relation(
+    fields: [creditCustomerId],
+    references: [id]
+  )
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([postedById])
+  @@index([creditCustomerId])
+}
+
+model CreditCustomer {
+  id          String  @id @default(cuid())
+  name        String
+  phone       String?
+  description String?
+
+  totalCredit Int @default(0)
+  totalPaid   Int @default(0)
+
+  payments    CreditPayment[]
+  creditSales Sale[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CreditPayment {
+  id     String @id @default(cuid())
+  amount Int
+
+  customerId String
+  customer   CreditCustomer @relation(
+    fields: [customerId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  receivedById String
+  receivedBy   User @relation(
+    "CreditPaymentReceivedBy",
+    fields: [receivedById],
+    references: [id]
+  )
+
+  createdAt DateTime @default(now())
+
+  @@index([customerId])
+  @@index([receivedById])
+  @@index([createdAt])
+}
+
+model Expense {
+  id            String          @id @default(cuid())
+  amount        Int
+  category      ExpenseCategory
+  description   String?
+  paymentMethod PaymentMethod
+
+  recordedById String
+  recordedBy   User @relation(
+    fields: [recordedById],
+    references: [id]
+  )
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([recordedById])
+}
+
+model Reconciliation {
+  /*
+   * =====================================================
+   * REPORT DATE
+   * =====================================================
+   *
+   * One reconciliation is allowed for each
+   * business day.
+   */
+  id DateTime @id
+
+  /*
+   * =====================================================
+   * SALES SUMMARY
+   * =====================================================
+   */
+  totalSales    Int @default(0)
+  cashSales     Int @default(0)
+  mpesaSales    Int @default(0)
+  creditSales   Int @default(0)
+  totalExpenses Int @default(0)
+
+  /*
+   * =====================================================
+   * ACTUAL CLOSING BALANCES
+   * =====================================================
+   *
+   * M-Pesa starts from ZERO every day.
+   *
+   * There is therefore NO openingMpesa field.
+   */
+  actualCash  Int @default(0)
+  actualMpesa Int @default(0)
+
+  /*
+   * =====================================================
+   * DIFFERENCES
+   * =====================================================
+   */
+  cashDifference  Int @default(0)
+  mpesaDifference Int @default(0)
+
+  /*
+   * =====================================================
+   * CASHIER NOTES
+   * =====================================================
+   */
+  notes String?
+
+  /*
+   * =====================================================
+   * CASHIER WHO SUBMITTED THE REPORT
+   * =====================================================
+   */
+  reconciledById String
+
+  reconciledBy User @relation(
+    "ReconciliationUser",
+    fields: [reconciledById],
+    references: [id]
+  )
+
+  /*
+   * =====================================================
+   * TIMESTAMPS
+   * =====================================================
+   */
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id          String  @id @default(cuid())
+  title       String
+  type        String
+  description String?
+  fileUrl     String?
+
+  approvedById String?
+
+  approvedBy User? @relation(
+    "DocumentApprover",
+    fields: [approvedById],
+    references: [id]
+  )
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([approvedById])
+}
+
+model HotelSettings {
+  id String @id @default("default")
+
+  hotelName    String @default("Hotel Management System")
+  hotelPhone   String?
+  hotelEmail   String?
+  hotelAddress String?
+  currency     String @default("KSh")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

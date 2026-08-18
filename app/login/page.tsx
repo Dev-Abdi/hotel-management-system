@@ -9,29 +9,14 @@ import {
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function HomePage() {
+export default function LoginPage() {
   const router = useRouter();
-
-  /*
-   * ======================================================
-   * LOGIN STATE
-   * ======================================================
-   *
-   * Both fields intentionally start completely empty.
-   * No username or password is hard-coded anywhere.
-   */
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  /*
-   * ======================================================
-   * LOGIN
-   * ======================================================
-   */
 
   async function handleLogin(
     event: FormEvent<HTMLFormElement>
@@ -40,24 +25,10 @@ export default function HomePage() {
 
     setError("");
 
-    /*
-     * Remove accidental spaces around username.
-     */
-
-    const cleanUsername =
-      username.trim();
-
-    /*
-     * ====================================================
-     * VALIDATION
-     * ====================================================
-     */
-
-    if (!cleanUsername || !password) {
+    if (!username.trim() || !password) {
       setError(
         "Please enter your username and password."
       );
-
       return;
     }
 
@@ -65,56 +36,46 @@ export default function HomePage() {
 
     try {
       /*
-       * ==================================================
-       * AUTHENTICATE WITH NEXTAUTH
-       * ==================================================
+       * ================================================
+       * AUTHENTICATE USER
+       * ================================================
        */
 
-      const result = await signIn(
-        "credentials",
-        {
-          username: cleanUsername,
-          password,
-          redirect: false,
-        }
-      );
+      const result = await signIn("credentials", {
+        username: username.trim(),
+        password,
+        redirect: false,
+      });
 
       /*
-       * ==================================================
+       * ================================================
        * LOGIN FAILED
-       * ==================================================
+       * ================================================
        */
 
-      if (
-        !result ||
-        result.error
-      ) {
+      if (!result || result.error) {
         setError(
           "Invalid username or password."
         );
-
-        setLoading(false);
-
         return;
       }
 
       /*
-       * ==================================================
+       * ================================================
        * LOGIN SUCCESSFUL
-       * ==================================================
+       * ================================================
        *
-       * Do NOT redirect directly to:
+       * Do NOT decide the user's role here.
        *
-       * /admin
-       * /cashier
-       * /waiter
+       * Do NOT send users directly to /admin.
        *
-       * The server-side dashboard router determines
-       * the correct destination using the user's role.
+       * The /dashboard page is a SERVER-SIDE
+       * role router and will determine:
        *
        * ADMIN   -> /admin
        * CASHIER -> /cashier
        * WAITER  -> /waiter
+       *
        */
 
       router.replace("/dashboard");
@@ -128,35 +89,26 @@ export default function HomePage() {
       setError(
         "Unable to connect to the authentication server."
       );
-
     } finally {
       setLoading(false);
     }
   }
-
-  /*
-   * ======================================================
-   * PAGE
-   * ======================================================
-   */
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 px-5 py-10">
 
       <div className="w-full max-w-md">
 
-        {/* ==================================================
+        {/* =================================================
             BRANDING
-        ================================================== */}
+        ================================================= */}
 
         <div className="mb-8 text-center">
 
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg">
-
             <span className="text-2xl font-bold">
               H
             </span>
-
           </div>
 
           <h1 className="mt-5 text-2xl font-bold text-slate-900">
@@ -169,9 +121,9 @@ export default function HomePage() {
 
         </div>
 
-        {/* ==================================================
+        {/* =================================================
             LOGIN CARD
-        ================================================== */}
+        ================================================= */}
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
 
@@ -185,7 +137,6 @@ export default function HomePage() {
 
           <form
             onSubmit={handleLogin}
-            autoComplete="off"
             className="mt-6 space-y-5"
           >
 
@@ -211,7 +162,7 @@ export default function HomePage() {
 
                 <input
                   id="username"
-                  name="login-username"
+                  name="username"
                   type="text"
                   value={username}
                   onChange={(event) =>
@@ -220,10 +171,7 @@ export default function HomePage() {
                     )
                   }
                   placeholder="Enter your username"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="none"
-                  spellCheck={false}
+                  autoComplete="username"
                   disabled={loading}
                   required
                   className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100"
@@ -255,7 +203,7 @@ export default function HomePage() {
 
                 <input
                   id="password"
-                  name="login-password"
+                  name="password"
                   type="password"
                   value={password}
                   onChange={(event) =>
@@ -264,7 +212,7 @@ export default function HomePage() {
                     )
                   }
                   placeholder="Enter your password"
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   disabled={loading}
                   required
                   className="w-full rounded-xl border border-slate-300 py-3 pl-10 pr-4 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 disabled:bg-slate-100"
@@ -306,9 +254,9 @@ export default function HomePage() {
 
         </div>
 
-        {/* ==================================================
+        {/* =================================================
             FOOTER
-        ================================================== */}
+        ================================================= */}
 
         <p className="mt-6 text-center text-xs text-slate-400">
           Hotel Management System
