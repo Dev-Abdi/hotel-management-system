@@ -55,16 +55,10 @@ model Sale {
   description   String?
 
   postedById String
-  postedBy   User @relation(
-    fields: [postedById],
-    references: [id]
-  )
+  postedBy   User   @relation(fields: [postedById], references: [id])
 
   creditCustomerId String?
-  creditCustomer   CreditCustomer? @relation(
-    fields: [creditCustomerId],
-    references: [id]
-  )
+  creditCustomer   CreditCustomer? @relation(fields: [creditCustomerId], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -94,18 +88,10 @@ model CreditPayment {
   amount Int
 
   customerId String
-  customer   CreditCustomer @relation(
-    fields: [customerId],
-    references: [id],
-    onDelete: Cascade
-  )
+  customer   CreditCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   receivedById String
-  receivedBy   User @relation(
-    "CreditPaymentReceivedBy",
-    fields: [receivedById],
-    references: [id]
-  )
+  receivedBy   User   @relation("CreditPaymentReceivedBy", fields: [receivedById], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -122,10 +108,7 @@ model Expense {
   paymentMethod PaymentMethod
 
   recordedById String
-  recordedBy   User @relation(
-    fields: [recordedById],
-    references: [id]
-  )
+  recordedBy   User   @relation(fields: [recordedById], references: [id])
 
   createdAt DateTime @default(now())
 
@@ -134,72 +117,25 @@ model Expense {
 }
 
 model Reconciliation {
-  /*
-   * =====================================================
-   * REPORT DATE
-   * =====================================================
-   *
-   * One reconciliation is allowed for each
-   * business day.
-   */
   id DateTime @id
 
-  /*
-   * =====================================================
-   * SALES SUMMARY
-   * =====================================================
-   */
   totalSales    Int @default(0)
   cashSales     Int @default(0)
   mpesaSales    Int @default(0)
   creditSales   Int @default(0)
   totalExpenses Int @default(0)
 
-  /*
-   * =====================================================
-   * ACTUAL CLOSING BALANCES
-   * =====================================================
-   *
-   * M-Pesa starts from ZERO every day.
-   *
-   * There is therefore NO openingMpesa field.
-   */
   actualCash  Int @default(0)
   actualMpesa Int @default(0)
 
-  /*
-   * =====================================================
-   * DIFFERENCES
-   * =====================================================
-   */
   cashDifference  Int @default(0)
   mpesaDifference Int @default(0)
 
-  /*
-   * =====================================================
-   * CASHIER NOTES
-   * =====================================================
-   */
   notes String?
 
-  /*
-   * =====================================================
-   * CASHIER WHO SUBMITTED THE REPORT
-   * =====================================================
-   */
   reconciledById String
+  reconciledBy   User   @relation("ReconciliationUser", fields: [reconciledById], references: [id])
 
-  reconciledBy User @relation(
-    "ReconciliationUser",
-    fields: [reconciledById],
-    references: [id]
-  )
-
-  /*
-   * =====================================================
-   * TIMESTAMPS
-   * =====================================================
-   */
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -212,12 +148,7 @@ model Document {
   fileUrl     String?
 
   approvedById String?
-
-  approvedBy User? @relation(
-    "DocumentApprover",
-    fields: [approvedById],
-    references: [id]
-  )
+  approvedBy   User?   @relation("DocumentApprover", fields: [approvedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -228,11 +159,11 @@ model Document {
 model HotelSettings {
   id String @id @default("default")
 
-  hotelName    String @default("Hotel Management System")
+  hotelName    String  @default("Hotel Management System")
   hotelPhone   String?
   hotelEmail   String?
   hotelAddress String?
-  currency     String @default("KSh")
+  currency     String  @default("KSh")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
